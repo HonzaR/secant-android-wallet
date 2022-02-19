@@ -11,14 +11,10 @@ import cash.z.ecc.sdk.model.PersistableWallet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// Synchronizer needs a Companion object
-// https://github.com/zcash/zcash-android-wallet-sdk/issues/310
-object SynchronizerCompanion {
-    suspend fun load(context: Context, persistableWallet: PersistableWallet): Synchronizer {
-        val config = persistableWallet.toConfig()
-        val initializer = withContext(Dispatchers.IO) { Initializer(context, config) }
-        return withContext(Dispatchers.IO) { Synchronizer(initializer) }
-    }
+suspend fun Synchronizer.Companion.new(context: Context, persistableWallet: PersistableWallet): Synchronizer {
+    val config = persistableWallet.toConfig()
+    val initializer = Initializer.new(context, config)
+    return Synchronizer.new(initializer)
 }
 
 private suspend fun PersistableWallet.deriveViewingKey(): UnifiedViewingKey {
@@ -28,13 +24,7 @@ private suspend fun PersistableWallet.deriveViewingKey(): UnifiedViewingKey {
         Mnemonics.MnemonicCode(seedPhrase.joinToString()).toSeed()
     }
 
-    // Dispatchers needed until an SDK is published with the implementation of
-    // https://github.com/zcash/zcash-android-wallet-sdk/issues/269
-    val viewingKey = withContext(Dispatchers.IO) {
-        DerivationTool.deriveUnifiedViewingKeys(bip39Seed, network)[0]
-    }
-
-    return viewingKey
+    return DerivationTool.deriveUnifiedViewingKeys(bip39Seed, network)[0]
 }
 
 private suspend fun PersistableWallet.toConfig(): Initializer.Config {

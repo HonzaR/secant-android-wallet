@@ -68,7 +68,7 @@ class WalletCoordinator(context: Context) {
         .flatMapConcat {
             callbackFlow {
                 val synchronizer = synchronizerMutex.withLock {
-                    val synchronizer = SynchronizerCompanion.load(applicationContext, it)
+                    val synchronizer = Synchronizer.new(it)
 
                     synchronizer.start(walletScope)
                 }
